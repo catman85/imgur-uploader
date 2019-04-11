@@ -7,9 +7,20 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Document</title>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.4/css/bulma.min.css">
+    <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
     <style>
-        .code {
-            margin-top: 1em;
+        body {
+            margin: 3em;
+        }
+
+        body * {
+            margin: 0.2em auto;
+        }
+
+        /* bulma override */
+        .field:not(:last-child) {
+            margin-bottom: 0;
         }
     </style>
 </head>
@@ -17,21 +28,68 @@
 <!-- https://medium.com/typecode/a-strategy-for-handling-multiple-file-uploads-using-javascript-eb00a77e15f -->
 
 <body>
-    <header>For Anthia</header>
-    <section>50 uploads per IP per hour max size 20MB</section>
-    <form id="imgur">
+    <header class="title is-3">Custom Imgur Uploader</header>
+    <section class="subtitle is-3">Upload multiple images and customize the resulting format as you wish</section>
+    <form id="imgur" class="level">
         <!-- file selector window only allows selection of image files. "images/*" -->
-        <input id="input" type="file" class="imgur" accept="images/*" data-max-size="20000" multiple />
-        <button type=submit>Submit</button>
-    </form>
+        <div class="field level-item has-text-centered">
+            <div class="file is-large has-name">
+                <label class="file-label">
+                    <input class="file-input" id="input" type="file" class="imgur" accept="images/*"
+                        data-max-size="20000" multiple name="resume">
+                    <span class="file-cta">
+                        <span class="file-icon">
+                            <i class="fas fa-upload"></i>
+                        </span>
+                        <span class="file-label">
+                            Select Files
+                        </span>
+                    </span>
+                    <span class="file-name">
+                    </span>
+                </label>
+            </div>
+        </div>
+        <!-- <input id="input" type="file" class="imgur" accept="images/*" data-max-size="20000" multiple /> -->
+        <div class="level-item has-text-centered"> <button type=submit
+                class="button is-primary is-large">Upload</button></div>
 
-    <section class="code">
+    </form>
+    <div class="columns">
+        <div class="column is-5">
+            <div class="box">
+                <progress class="progress is-success" value="0" max="100"></progress>
+            </div>
+        </div>
+        <div class="column is-4">
+            <div class="notification is-warning">
+                <button class="delete"></button>
+                <strong><a>Don't close the page!</a> Wait until the process is done</strong>
+            </div>
+        </div>
+
+    </div>
+    <section class="code box">
         <span id="pre"></span>
         <span id="mid">
             <p></p>
         </span>
         <span id="post"></span>
     </section>
+
+    <section class="hero is-small is-bold is-info">
+        <div class="hero-body">
+            <div class="container">
+                <h1 class="title">
+                    Limitations
+                </h1>
+                <h2 class="subtitle">
+                    <strong> 50 uploads <a>per IP per Hour.</a> Max size of single image 20MB</strong>
+                </h2>
+            </div>
+        </div>
+    </section>
+    </div>
 
     <script>
         $("document").ready(function () {
@@ -43,6 +101,8 @@
             let post = document.querySelector("#post");
             let btn = document.querySelector("button");
             let form = document.querySelector("form");
+            let prog = document.querySelector("progress");
+            let notification = document.querySelector(".notification");
 
             let fileList = [];
             let dummy = [
@@ -67,20 +127,22 @@
                 for (let i = 0; i < input.files.length; i++) {
                     fileList.push(input.files[i]);
                 }
+                refresh();
             });
 
             //runs when we click the submit button
             form.addEventListener('submit', function (event) {
                 event.preventDefault(); // don't leave the window in search of a server
                 prepareCode();
-                fileList.forEach(function (file) {
-                    upload(file);
-                    // here we have to wait before append is called
-                });
-                // dummy.forEach(function (url) {
-                //     // append(format(url));
-                //     format(url);
+                // fileList.forEach(function (file) {
+                //     upload(file);
+                //     // here we have to wait before append is called
                 // });
+                dummy.forEach(function (url) {
+                    // append(format(url));
+                    prog.setAttribute("max",dummy.length);
+                    formatPublii(url);
+                });
             });
 
 
@@ -123,7 +185,7 @@
 
                 // Response contains stringified JSON
                 // Image URL available at response.data.link
-                console.log(0);
+                // console.log(0);
                 $.ajax(settings).done(function (response) {
                     let result = JSON.parse(response);
                     // redirect to the result
@@ -137,25 +199,30 @@
 
             let formatPublii = function (url) {
                 let img = new Image();
-                let dim = {old:{},new:{}}
+                let dim = {
+                    old: {},
+                    new: {}
+                }
                 let fixedWidth = 768; // Mansory Layout
                 img.src = url;
-                img.onload= function(){ // takes time waits for the image to load
+                img.onload = function () { // takes time waits for the image to load
                     dim.old.width = img.width;
                     dim.old.height = img.height;
                     let ratio = img.height / img.width;
                     dim.new.width = fixedWidth
                     dim.new.height = Math.floor(ratio * dim.new.width)
 
-                    let code = '<figure class="gallery__item"><a href="' + url + '" data-size="' + dim.old.width +
-                    "x" + dim.old.height + '"><img src="' + url + '" alt="" width="' + dim.new.width +
-                    '" height="' + dim.new.height + '"></a></figure>';  
+                    let code = '<figure class="gallery__item"><a href="' + url + '" data-size="' + dim
+                        .old.width +
+                        "x" + dim.old.height + '"><img src="' + url + '" alt="" width="' + dim.new
+                        .width +
+                        '" height="' + dim.new.height + '"></a></figure>';
                     console.debug(dim);
-                    console.log(1);
+                    // console.log(1);
                     // return code;
                     append(code);
                 }
-                
+
             }
 
             let append = function (inp) {
@@ -164,15 +231,66 @@
                 let text = document.createTextNode(inp);
                 span.appendChild(p);
                 p.appendChild(text);
-                console.log(2);
+                progressAddOne();
+                // console.log(2);
             }
 
             let prepareCode = function () {
                 pre.innerText =
-                    '<div class="gallery" contenteditable="false" data-is-empty="false" data-columns="3">';
+                    '<!-- test --><div class="gallery" contenteditable="false" data-is-empty="false" data-columns="3">';
                 post.innerText = '</div>'
             }
+
+            let progressAddOne = function () {
+                let val = parseInt(prog.getAttribute("value"));
+                val=val+1;
+                prog.setAttribute("value",val);
+                console.debug(val +" "+prog.getAttribute("max") );
+                if ((val) >= prog.getAttribute("max")){
+                    lock();
+                }
+            }
+
+            let refresh = function() {
+                if(notification.classList.contains('is-success')){
+                    notification.classList.remove('is-success');
+                    notification.classList.add('is-warning');
+                }
+                if(btn.getAttribute('disabled')!=null){
+                    btn.removeAttribute('disabled');
+                }
+                prog.setAttribute("max",fileList.length);
+                prog.setAttribute("value","0");
+            }
+
+            let lock = function() {
+                notification.classList.remove('is-warning');
+                notification.classList.add('is-success');
+                btn.setAttribute('disabled','');
+            }
+
+
         });
+
+        // Notification delete
+        document.addEventListener('DOMContentLoaded', () => {
+            (document.querySelectorAll('.notification .delete') || []).forEach(($delete) => {
+                $notification = $delete.parentNode;
+                $delete.addEventListener('click', () => {
+                    $notification.parentNode.removeChild($notification);
+                });
+            });
+        });
+
+
+
+        input.onchange = function () {
+            if (input.files.length > 0) {
+                let f = (input.files.length > 1) ? ' Files' : ' File'; // Plural
+                document.querySelector('.file-name').innerHTML = input.files.length + f + ' Selected';
+
+            }
+        };
     </script>
 </body>
 
