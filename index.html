@@ -75,7 +75,7 @@
             </label>
         </div>
         <div class="level-item has-text-centered"> <button type=submit
-                class="button is-primary is-large">Upload</button></div>
+                class="button is-primary is-large" disabled>Upload</button></div>
         <!-- FIXME: add disabled when you are done -->
 
     </form>
@@ -128,18 +128,6 @@
 
     <script src="functions.js"></script>
     <script>
-        // runs when we select a radio value
-        radio.onchange = function () {
-            console.log(getSelectedFormat());
-            newCode(getSelectedFormat());
-        }
-
-        copyBtn.onclick = function () {
-            codeText.select();
-            document.execCommand('copy');
-            console.log("Copied Text");
-        }
-
         // runs when the user selects files
         fileSelector.onchange = function () {
             showFileSelectorText();
@@ -151,16 +139,14 @@
         form.addEventListener('submit', function (event) {
             event.preventDefault(); // don't leave the window in search of a server
             let option = getSelectedFormat();
+            btnLock();
 
-            // append(prePublii);
             if (option == "publii") {
                 fileList.forEach(
                     async function (file) {
                         upload(file)
                             .then(formatPublii)
                             .then(appendPublii);
-
-
                     });
             } else if (option == "markdown") {
                 fileList.forEach(
@@ -177,20 +163,30 @@
                     });
             }
 
-            //TODO: right clean code
             //FIXME: comment these when done
             // prog.setAttribute("max", dummy.length);
 
             //     dummy.forEach(function (dum) {
             //         // append(format(url));
             //         // url = dum;
-            //          // entries.push(dum)
+            //         entries.push(dum)
             //         formatPublii(dum).then(appendPublii); // then goes to append
             //         progressAddOne();
             //     });
 
 
         });
+
+        // runs when we select a radio value
+        radio.onchange = function () {
+            newCode(getSelectedFormat());
+        }
+
+        copyBtn.onclick = function () {
+            codeText.select();
+            document.execCommand('copy');
+            console.log("Copied Text");
+        }
 
         // Notification delete
         document.addEventListener('DOMContentLoaded', () => {

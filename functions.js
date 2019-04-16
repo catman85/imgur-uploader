@@ -1,36 +1,13 @@
-// let test = function(value){
-//     return value+1;
-// }
-
-// let test2 = function(value){
-//     alert(value)
-// }
-
-// await only suspends when the value passed to it is a Promise
-// async function f() {
-//     // https://javascript.info/async-await
-//     // The word “async” before a function means one simple thing: a function always returns a promise. Even If a function actually returns a non-promise value, prepending the function definition with the “async” keyword directs Javascript to automatically wrap that value in a resolved promise.
-//     // So, async ensures that the function returns a promise, and wraps non-promises in it. Simple enough, right? But not only that. There’s another keyword, await, that works only inside async functions
-//     // The async keyword before a function has two effects:
-//     // -Makes it always return a promise.
-//     // -Allows to use await in it.
-//     // The await keyword before a promise makes JavaScript wait until that promise settles, and then:
-//     // If it’s an error, the exception is generated, same as if throw error were called at that very place.
-//     // Otherwise, it returns the result, so we can assign it to a value.
-
-//     let res = Promise.resolve(1);
-//     return await res;
-// }
-
-// f().then(test).then(test2);
+// https://javascript.info/async-await
+// https://stackoverflow.com/questions/48617486/why-async-await-doesnt-work-in-my-case
+// https://javascript.info/callbacks
+// https://stackoverflow.com/questions/46399223/async-await-in-image-loading
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/then
 
 
 // binding dom
 let fileSelector = document.querySelector(".file-input");
 let radio = document.querySelector(".control");
-// let pre = document.querySelector("#pre");
-// let span = document.querySelector("#mid");
-// let post = document.querySelector("#post");
 let mid = '';
 let btn = document.querySelector("button");
 let form = document.querySelector("form");
@@ -39,17 +16,14 @@ let notification = document.querySelector(".notification");
 let selectedFilesText = document.querySelector('.file-name');
 let codeText = document.querySelector('.code');
 let copyBtn = document.querySelector('#copy');
-let i = null;
 
+// global vars :(
 let fileList = [];
 let entries = [];
-// let url = null;
-// let code = null;
 let dim; // image dimensions old and new
 let prePublii = '<div class="gallery" contenteditable="false" \
 data-is-empty="false" data-columns="3">';
 let postPublii = '</div>';
-
 let dummy = [
     "https://i.imgur.com/pydVVTv.jpg",
     "https://i.imgur.com/YAnGPpm.jpg",
@@ -174,21 +148,15 @@ let appendPublii = function (code) {
 }
 
 let append = function (code) {
-    codeText.value += code + ' \n ';
+    codeText.value += code + '   \n';
+    //FIXME: why do all the uploads have to end for the appends to start?
     // let span = document.querySelector("#mid");
     // let p = document.createElement("p");
     // let text = document.createTextNode(code);
     // span.appendChild(p);
     // p.appendChild(text);
-    //FIXME: why do all the uploads have to end for the appends to start?
+    
 }
-
-// let prepareCodePublii = function () {
-//     pre.innerText =
-//         '<div class="gallery" contenteditable="false" \
-//         data-is-empty="false" data-columns="3">';
-//     post.innerText = '</div>';
-// }
 
 let progressAddOne = function () {
     let val = parseInt(prog.getAttribute("value"));
@@ -232,18 +200,21 @@ let showFileSelectorText = function () {
 let lock = function () {
     notification.classList.remove('is-warning');
     notification.classList.add('is-success');
+    btnLock();
+}
+
+let btnLock = function (){
     btn.setAttribute('disabled', '');
 }
 
 let newCode = function (option) {
     codeText.value = '';
-    refreshUI();
+    // refreshUI();
     mid = ''; // for Publii
     if (entries.length <= 0) {
         return;
     }
     if (option == 'publii') {
-
         entries.forEach(function (entry) {
             formatPublii(entry.data.link).then(appendPublii);
         });
