@@ -16,6 +16,16 @@
 
         body * {
             margin: 0.2em auto;
+
+        }
+
+        .control {
+            text-align: center;
+            margin: 1em auto;
+        }
+
+        #copy {
+            margin-bottom: -1em;
         }
 
         /* bulma override */
@@ -50,11 +60,26 @@
                 </label>
             </div>
         </div>
-        <!-- <input id="input" type="file" class="imgur" accept="images/*" data-max-size="20000" multiple /> -->
+        <div class="control">
+            <label class="radio">
+                <input type="radio" name="format" value="direct">
+                Direct-Links
+            </label>
+            <label class="radio">
+                <input type="radio" name="format" value="markdown">
+                Markdown
+            </label>
+            <label class="radio">
+                <input type="radio" name="format" value="publii" checked>
+                Publii-Gallery
+            </label>
+        </div>
         <div class="level-item has-text-centered"> <button type=submit
                 class="button is-primary is-large">Upload</button></div>
+        <!-- FIXME: add disabled when you are done -->
 
     </form>
+
     <div class="columns">
         <div class="column is-5">
             <div class="box">
@@ -69,13 +94,23 @@
         </div>
 
     </div>
-    <section class="code box">
-        <span id="pre"></span>
-        <span id="mid">
-            <p></p>
-        </span>
-        <span id="post"></span>
-    </section>
+    <div class="level">
+        <div class="level-item">
+
+            <button id="copy" class="button">Copy Code</button></div>
+    </div>
+    <!-- <textarea id="pre" class="textarea" rows="1">
+    </textarea> -->
+    <textarea id="code" class="code box textarea" rows="7">
+    </textarea>
+    <!-- <textarea id="post" class="textarea" rows="1">
+    </textarea> -->
+    <!-- <textarea hidden id="clip" cols="30" rows="10">yo</textarea> -->
+    <!-- <span id="pre"></span>
+    <span id="mid">
+        <p>T</p>
+    </span>
+    <span id="post"></span> -->
 
     <section class="hero is-small is-bold is-info">
         <div class="hero-body">
@@ -93,37 +128,66 @@
 
     <script src="functions.js"></script>
     <script>
-        $("document").ready(function () {
-            // runs when the user selects files
-            $('input[type=file]').on("change", function () {
-                fileList = [];
-                // Notice how the fileList array is reset inside the change handler. 
-                // This is in case the user selects files more than once.
-                // We don't want to upload the same image multiple times
-                for (let i = 0; i < input.files.length; i++) {
-                    fileList.push(input.files[i]);
-                }
-                refresh();
-            });
+        // runs when we select a radio value
+        radio.onchange = function () {
+            console.log(getSelectedFormat());
+            newCode(getSelectedFormat());
+        }
 
-            //runs when we click the submit button
-            form.addEventListener('submit', function (event) {
-                event.preventDefault(); // don't leave the window in search of a server
-                prepareCode();
-                prog.setAttribute("max", dummy.length);
+        copyBtn.onclick = function () {
+            codeText.select();
+            document.execCommand('copy');
+            console.log("Copied Text");
+        }
 
-                fileList.forEach(function (file) {
-                    upload(file); // then goes to format wich then goes to append
-                    // here we have to wait before append is called
-                });
-                //TODO: right clean code
-                // dummy.forEach(function (dum) {
-                //     // append(format(url));
-                //     url = dum;
-                    
-                //     formatPublii(); // then goes to append
-                // });
-            });
+        // runs when the user selects files
+        fileSelector.onchange = function () {
+            showFileSelectorText();
+            createFileList();
+            refreshUI();
+        };
+
+        //runs when we click the submit button
+        form.addEventListener('submit', function (event) {
+            event.preventDefault(); // don't leave the window in search of a server
+            let option = getSelectedFormat();
+
+            // append(prePublii);
+            if (option == "publii") {
+                fileList.forEach(
+                    async function (file) {
+                        upload(file)
+                            .then(formatPublii)
+                            .then(appendPublii);
+
+
+                    });
+            } else if (option == "markdown") {
+                fileList.forEach(
+                    async function (file) {
+                        upload(file)
+                            .then(formatMarkdown)
+                            .then(append);
+                    });
+            } else {
+                fileList.forEach(
+                    async function (file) {
+                        upload(file)
+                            .then(append);
+                    });
+            }
+
+            //TODO: right clean code
+            //FIXME: comment these when done
+            // prog.setAttribute("max", dummy.length);
+
+            //     dummy.forEach(function (dum) {
+            //         // append(format(url));
+            //         // url = dum;
+            //          // entries.push(dum)
+            //         formatPublii(dum).then(appendPublii); // then goes to append
+            //         progressAddOne();
+            //     });
 
 
         });
@@ -137,16 +201,6 @@
                 });
             });
         });
-
-
-        // Selected Files Text
-        input.onchange = function () {
-            if (input.files.length > 0) {
-                let f = (input.files.length > 1) ? ' Files' : ' File'; // Plural
-                document.querySelector('.file-name').innerHTML = input.files.length + f + ' Selected';
-
-            }
-        };
     </script>
 </body>
 
