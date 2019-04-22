@@ -89,7 +89,7 @@ let upload = async function (file) {
         url = result.data.link;
         let message = "✅ " + file.name + " --- " + url;
         console.log(message);
-        showMessage(message);
+        showMessage(message, url);
         progressAddOne();
         // return new Promise.resolve(url); // FIXME: user has to switch format and then it works?
     }).fail(function (response) {
@@ -253,9 +253,20 @@ let sleepIsNeeded = function () {
     }
 }
 
-let showMessage = function (message) {
-    let p = document.createElement("p");
+let showMessage = function (message, url) {
     let text = document.createTextNode(message);
+    let p = document.createElement("p");
+    let a = document.createElement('a');
+    a.href = url;
+    a.target = "_blank"
+
+    if (url) {
+        a.appendChild(text);
+        p.appendChild(a);
+    } else {
+        p.appendChild(text);
+    }
     messages.appendChild(p);
-    p.appendChild(text);
+
+
 }
