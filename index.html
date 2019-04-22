@@ -41,13 +41,12 @@
     <header class="title is-3">Custom Imgur Uploader</header>
     <section class="subtitle is-3">Upload multiple images and customize the resulting format as you wish</section>
     <form id="imgur" class="level">
-        <!-- file selector window only allows selection of image files. "images/*" -->
+        <!-- file selector window only allows selection of image files. "image/*" -->
         <div class="field level-item has-text-centered">
             <div class="file is-large has-name">
                 <label class="file-label">
-                    <!-- accept="images/*" -->
-                    <input class="file-input" id="input" type="file" class="imgur" data-max-size="20000" multiple
-                        name="resume">
+                    <input class="file-input" id="input" type="file" accept="image/*" class="imgur"
+                        data-max-size="20000" multiple name="resume">
                     <span class="file-cta">
                         <span class="file-icon">
                             <i class="fas fa-upload"></i>
@@ -61,6 +60,7 @@
                 </label>
             </div>
         </div>
+        <!-- radio format selector -->
         <div class="control">
             <label class="radio">
                 <input type="radio" name="format" value="direct">
@@ -75,18 +75,20 @@
                 Publii-Gallery
             </label>
         </div>
+        <!-- submit button -->
         <div class="level-item has-text-centered"> <button type=submit class="button is-primary is-large"
                 disabled>Upload</button></div>
-        <!-- FIXME: add disabled when you are done -->
 
     </form>
 
     <div class="columns">
+        <!-- progress bar -->
         <div class="column is-5">
             <div class="box">
                 <progress class="progress is-success" value="0" max="100"></progress>
             </div>
         </div>
+        <!-- notification -->
         <div class="column is-4">
             <div class="notification is-warning">
                 <button class="delete"></button>
@@ -96,15 +98,17 @@
 
     </div>
     <div class="level">
+        <!-- copy code btn -->
         <div class="level-item">
-
-            <button id="copy" class="button">Copy Code</button></div>
+            <button id="copy" class="button">Copy Code</button>
+        </div>
     </div>
 
+    <!-- code -->
     <textarea id="code" class="code box textarea" rows="7">
     </textarea>
-
-    <span class="code box" id="messages">
+    <!-- message board -->
+    <span id="messages" class="code box">
     </span>
 
 
@@ -168,19 +172,6 @@
                             });
                     });
             }
-
-            //FIXME: comment these when done
-            // prog.setAttribute("max", dummy.length);
-
-            //     dummy.forEach(function (dum) {
-            //         // append(format(url));
-            //         // url = dum;
-            //         entries.push(dum)
-            //         formatPublii(dum).then(appendPublii); // then goes to append
-            //         progressAddOne();
-            //     });
-
-
         });
 
         // runs when we select a radio value

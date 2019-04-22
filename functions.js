@@ -3,6 +3,7 @@
 // https://javascript.info/callbacks
 // https://stackoverflow.com/questions/46399223/async-await-in-image-loading
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/then
+// https://codeburst.io/javascript-async-await-with-foreach-b6ba62bbf404
 
 
 // binding dom
@@ -24,21 +25,12 @@ let dim; // image dimensions old and new
 let prePublii = '<div class="gallery" contenteditable="false" \
 data-is-empty="false" data-columns="3">';
 let postPublii = '</div>';
-let dummy = [
-    "https://i.imgur.com/pydVVTv.jpg",
-    "https://i.imgur.com/YAnGPpm.jpg",
-    "https://i.imgur.com/o6KFtZn.jpg",
-    "https://i.imgur.com/ENoNmxD.jpg",
-    "https://i.imgur.com/PqprpDj.jpg",
-    "https://i.imgur.com/uBRjFUp.jpg",
-    "https://i.imgur.com/JGi1Kjg.jpg",
-    "https://i.imgur.com/ib5ooka.jpg"
-];
+
+
 
 let getMaxAllowedImageSize = function () {
     return fileSelector.getAttribute("data-max-size") * 1024;
 }
-var maxSize = getMaxAllowedImageSize();
 
 let getSelectedFormat = function () {
     return document.querySelector('input[name="format"]:checked').value;
@@ -47,16 +39,18 @@ let getSelectedFormat = function () {
 //this is called multiple times
 //it takes time to upload the img (async)
 let upload = async function (file) {
-    if (file.length) {// pointless?
+    if (file.length) { // pointless?
         alert("Please Select files first")
         Promise.reject(new Error('No Files'));
+        return; // to be able to interact with the ui again
     }
-    if (file.size > maxSize) {
+    if (file.size > getMaxAllowedImageSize()) {
         alert(file.name + " is too big.");
         Promise.reject(new Error('Too Big'));
+        return;
     }
 
-    if(sleepIsNeeded()){
+    if (sleepIsNeeded()) {
         // Imgur freq limit 50 Images/hour
         // Period = 1/50*60 mins = 1,2 mins = 72 secs
         await sleep(75);
@@ -97,13 +91,15 @@ let upload = async function (file) {
         console.log(message);
         showMessage(message);
         progressAddOne();
-        // Promise.resolve(url); // FIXME: why doesn't this work?
+        // return new Promise.resolve(url); // FIXME: user has to switch format and then it works?
     }).fail(function (response) {
         let result = JSON.parse(response.responseText);
         let message = "❌ " + file.name + " --- " + result.data.error.message
         console.log(message);
         showMessage(message);
-        Promise.reject(new Error('fail')).then(resolvedNotcalled, ()=>{console.debug(result);});
+        Promise.reject(new Error('fail')).then(resolvedNotcalled, () => {
+            console.debug(result);
+        });
     });
 
     return new Promise((resolve, reject) => {
@@ -179,8 +175,6 @@ let refreshUI = function () {
     if (fileList.length > 0) {
         btn.removeAttribute('disabled');
         prog.setAttribute("max", fileList.length);
-        // TODO: set max value UI
-        // if more than 50 goto sleep mode
     }
     prog.setAttribute("value", "0");
 }
@@ -220,9 +214,10 @@ let newCode = function (option) {
         return;
     }
     if (option == 'publii') {
-        entries.forEach(function (entry) {
-            formatPublii(entry.data.link).then(appendPublii);
-        });
+        asyncForEach(entries,
+            async function (entry) {
+                await formatPublii(entry.data.link).then(appendPublii);
+            });
     } else if (option == "markdown") {
         entries.forEach(function (entry) {
             formatMarkdown(entry.data.link).then(append);
@@ -237,9 +232,9 @@ let newCode = function (option) {
 // IMPORTANT classic forEach is not async compatible
 async function asyncForEach(array, callback) {
     for (let index = 0; index < array.length; index++) {
-      await callback(array[index], index, array);
-      // we dont use index or array
-      // we only use arra[index] (file)
+        await callback(array[index], index, array);
+        // we dont use index or array
+        // we only use arra[index]    (file)
     }
 }
 
@@ -247,18 +242,18 @@ function sleep(sec) {
     let message = "💤  taking a nap for: " + sec + "secs... (Imgur Rate Limiting)";
     console.log(message);
     showMessage(message);
-    return new Promise(resolve => setTimeout(resolve, sec*1000));
+    return new Promise(resolve => setTimeout(resolve, sec * 1000));
 }
 
-let sleepIsNeeded = function(){
-    if(fileList.length>=2){
+let sleepIsNeeded = function () {
+    if (fileList.length >= 50) {
         return true;
-    }else{
+    } else {
         return false;
     }
 }
 
-let showMessage = function(message){
+let showMessage = function (message) {
     let p = document.createElement("p");
     let text = document.createTextNode(message);
     messages.appendChild(p);
