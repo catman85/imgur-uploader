@@ -8,7 +8,7 @@
 // binding dom
 let fileSelector = document.querySelector(".file-input");
 let radio = document.querySelector(".control");
-let mid = '';
+let messages = document.querySelector("#messages");
 let btn = document.querySelector("button");
 let form = document.querySelector("form");
 let prog = document.querySelector("progress");
@@ -36,7 +36,7 @@ let dummy = [
 ];
 
 let getMaxAllowedImageSize = function () {
-    return $('input[type=file]').data("max-size") * 1024;
+    return fileSelector.getAttribute("data-max-size") * 1024;
 }
 var maxSize = getMaxAllowedImageSize();
 
@@ -44,22 +44,26 @@ let getSelectedFormat = function () {
     return document.querySelector('input[name="format"]:checked').value;
 }
 
-
 //this is called multiple times
 //it takes time to upload the img (async)
 let upload = async function (file) {
-    if (file.length) {
-        console.log("Please Select files first");
-        return false;
+    if (file.length) {// pointless?
+        alert("Please Select files first")
+        Promise.reject(new Error('No Files'));
     }
-    // Reject big files
-    if (file.size > $(this).data("max-size") * 1024) {
-        console.log("Please select a smaller file");
-        return false;
+    if (file.size > maxSize) {
+        alert(file.name + " is too big.");
+        Promise.reject(new Error('Too Big'));
+    }
+
+    if(sleepIsNeeded()){
+        // Imgur freq limit 50 Images/hour
+        // Period = 1/50*60 mins = 1,2 mins = 72 secs
+        await sleep(75);
     }
 
     // Begin file upload
-    console.log("Uploading file to Imgur...");
+    console.log("Uploading image to Imgur...");
 
     // Replace with your own API key
     var apiUrl = 'https://api.imgur.com/3/image';
@@ -85,15 +89,26 @@ let upload = async function (file) {
 
     // Response contains stringified JSON
     // Image URL available at response.data.link
+    $.ajax(settings).done(async function (response) {
+        let result = JSON.parse(response);
+        entries.push(result);
+        url = result.data.link;
+        let message = "✅ " + file.name + " --- " + url;
+        console.log(message);
+        showMessage(message);
+        progressAddOne();
+        // Promise.resolve(url); // FIXME: why doesn't this work?
+    }).fail(function (response) {
+        let result = JSON.parse(response.responseText);
+        let message = "❌ " + file.name + " --- " + result.data.error.message
+        console.log(message);
+        showMessage(message);
+        Promise.reject(new Error('fail')).then(resolvedNotcalled, ()=>{console.debug(result);});
+    });
+
     return new Promise((resolve, reject) => {
-        $.ajax(settings).done(function (response) {
-            let result = JSON.parse(response);
-            entries.push(result);
-            url = result.data.link;
-            console.debug("Resolve upload")
-            progressAddOne();
-            resolve(url);
-        });
+        resolve(url); // this is what whis function returns
+        // with resolve we trigger the next ".then(funName(resolveParam))"
     })
 }
 
@@ -112,7 +127,6 @@ let imageProcess = async function (url) {
             let ratio = img.height / img.width;
             dim.new.width = fixedWidth
             dim.new.height = Math.floor(ratio * dim.new.width)
-            console.debug("resolve imageProcess");
             resolve();
         }
     })
@@ -128,41 +142,30 @@ let formatPublii = async function (url) {
             "x" + dim.old.height + '"><img src="' + url + '" alt="" width="' + dim.new
             .width +
             '" height="' + dim.new.height + '"></a></figure>';
-        console.debug("resolve format")
         resolve(code);
     });
 }
 
 let formatMarkdown = async function (url) {
-    // console.log("formatMarkdown");
     return new Promise((resolve, reject) => {
         resolve('![Imgur](' + url + ')');
     })
 }
 
 let appendPublii = function (code) {
-    console.debug("Appending...")
     mid += code + '\n';
-    codeText.value = prePublii + mid + postPublii;
+    codeText.value = prePublii + '\n' + mid + postPublii;
 
 }
 
-let append = function (code) {
+let append = async function (code) {
     codeText.value += code + '   \n';
-    //FIXME: why do all the uploads have to end for the appends to start?
-    // let span = document.querySelector("#mid");
-    // let p = document.createElement("p");
-    // let text = document.createTextNode(code);
-    // span.appendChild(p);
-    // p.appendChild(text);
-    
 }
 
 let progressAddOne = function () {
     let val = parseInt(prog.getAttribute("value"));
     val = val + 1;
     prog.setAttribute("value", val);
-    // console.debug(val + " " + prog.getAttribute("max"));
     if ((val) >= prog.getAttribute("max")) {
         lock();
     }
@@ -176,6 +179,8 @@ let refreshUI = function () {
     if (fileList.length > 0) {
         btn.removeAttribute('disabled');
         prog.setAttribute("max", fileList.length);
+        // TODO: set max value UI
+        // if more than 50 goto sleep mode
     }
     prog.setAttribute("value", "0");
 }
@@ -203,7 +208,7 @@ let lock = function () {
     btnLock();
 }
 
-let btnLock = function (){
+let btnLock = function () {
     btn.setAttribute('disabled', '');
 }
 
@@ -227,4 +232,35 @@ let newCode = function (option) {
             append(entry.data.link);
         });
     }
+}
+
+// IMPORTANT classic forEach is not async compatible
+async function asyncForEach(array, callback) {
+    for (let index = 0; index < array.length; index++) {
+      await callback(array[index], index, array);
+      // we dont use index or array
+      // we only use arra[index] (file)
+    }
+}
+
+function sleep(sec) {
+    let message = "💤  taking a nap for: " + sec + "secs... (Imgur Rate Limiting)";
+    console.log(message);
+    showMessage(message);
+    return new Promise(resolve => setTimeout(resolve, sec*1000));
+}
+
+let sleepIsNeeded = function(){
+    if(fileList.length>=2){
+        return true;
+    }else{
+        return false;
+    }
+}
+
+let showMessage = function(message){
+    let p = document.createElement("p");
+    let text = document.createTextNode(message);
+    messages.appendChild(p);
+    p.appendChild(text);
 }

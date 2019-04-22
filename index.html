@@ -45,8 +45,9 @@
         <div class="field level-item has-text-centered">
             <div class="file is-large has-name">
                 <label class="file-label">
-                    <input class="file-input" id="input" type="file" class="imgur" accept="images/*"
-                        data-max-size="20000" multiple name="resume">
+                    <!-- accept="images/*" -->
+                    <input class="file-input" id="input" type="file" class="imgur" data-max-size="20000" multiple
+                        name="resume">
                     <span class="file-cta">
                         <span class="file-icon">
                             <i class="fas fa-upload"></i>
@@ -74,8 +75,8 @@
                 Publii-Gallery
             </label>
         </div>
-        <div class="level-item has-text-centered"> <button type=submit
-                class="button is-primary is-large" disabled>Upload</button></div>
+        <div class="level-item has-text-centered"> <button type=submit class="button is-primary is-large"
+                disabled>Upload</button></div>
         <!-- FIXME: add disabled when you are done -->
 
     </form>
@@ -99,18 +100,13 @@
 
             <button id="copy" class="button">Copy Code</button></div>
     </div>
-    <!-- <textarea id="pre" class="textarea" rows="1">
-    </textarea> -->
+
     <textarea id="code" class="code box textarea" rows="7">
     </textarea>
-    <!-- <textarea id="post" class="textarea" rows="1">
-    </textarea> -->
-    <!-- <textarea hidden id="clip" cols="30" rows="10">yo</textarea> -->
-    <!-- <span id="pre"></span>
-    <span id="mid">
-        <p>T</p>
+
+    <span class="code box" id="messages">
     </span>
-    <span id="post"></span> -->
+
 
     <section class="hero is-small is-bold is-info">
         <div class="hero-body">
@@ -136,30 +132,40 @@
         };
 
         //runs when we click the submit button
-        form.addEventListener('submit', function (event) {
+        form.addEventListener('submit', async function (event) {
             event.preventDefault(); // don't leave the window in search of a server
             let option = getSelectedFormat();
             btnLock();
 
+            // classic forEach is not async compatible
             if (option == "publii") {
-                fileList.forEach(
+                asyncForEach(fileList,
                     async function (file) {
-                        upload(file)
+                        await upload(file)
                             .then(formatPublii)
-                            .then(appendPublii);
+                            .then(appendPublii)
+                            .catch(() => {
+                                console.log("ERROR with: " + file.name);
+                            });
                     });
             } else if (option == "markdown") {
-                fileList.forEach(
+                asyncForEach(fileList,
                     async function (file) {
-                        upload(file)
+                        await upload(file)
                             .then(formatMarkdown)
-                            .then(append);
+                            .then(append)
+                            .catch(() => {
+                                console.log("ERROR with: " + file.name);
+                            });
                     });
             } else {
-                fileList.forEach(
+                asyncForEach(fileList,
                     async function (file) {
-                        upload(file)
-                            .then(append);
+                        await upload(file)
+                            .then(append)
+                            .catch(() => {
+                                console.log("ERROR with: " + file.name);
+                            });
                     });
             }
 
