@@ -144,7 +144,8 @@ let formatPublii = async function (url) {
 
 let formatMarkdown = async function (url) {
     return new Promise((resolve, reject) => {
-        resolve('![Imgur](' + url + ')');
+        // ATTENTION this "\n" character is needed for NetlifyCMS to recognize the markdown entries as images
+        resolve('![Imgur](' + url + ')\n');
     })
 }
 
