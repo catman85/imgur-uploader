@@ -91,7 +91,7 @@ let upload = async function (file) {
         console.log(message);
         showMessage(message, url);
         progressAddOne();
-        // return new Promise.resolve(url); // FIXME: user has to switch format and then it works?
+        // return new Promise.resolve(url); // user has to switch format and then it works?
     }).fail(function (response) {
         let result = JSON.parse(response.responseText);
         let message = "❌ " + file.name + " --- " + result.data.error.message
