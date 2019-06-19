@@ -156,7 +156,7 @@ let appendPublii = function (code) {
 }
 
 let append = async function (code) {
-    codeText.value += code + '   \n';
+    codeText.value += code + '\n';
 }
 
 let progressAddOne = function () {
