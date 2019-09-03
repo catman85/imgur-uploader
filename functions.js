@@ -39,6 +39,7 @@ let getSelectedFormat = function () {
 //this is called multiple times
 //it takes time to upload the img (async)
 let upload = async function (file) {
+
     if (file.length) { // pointless?
         alert("Please Select files first")
         Promise.reject(new Error('No Files'));
@@ -60,11 +61,12 @@ let upload = async function (file) {
     console.log("Uploading image to Imgur...");
 
     // Replace with your own API key
+    // this API key has no value
     var apiUrl = 'https://api.imgur.com/3/image';
     var apiKey = '28aaa2e823b03b1';
 
     var settings = {
-        async: false,
+        async: true, // execution isn't paused
         crossDomain: true,
         processData: false,
         contentType: false,
@@ -81,30 +83,32 @@ let upload = async function (file) {
     formData.append("image", file);
     settings.data = formData;
 
-    // Response contains stringified JSON
-    // Image URL available at response.data.link
-    $.ajax(settings).done(async function (response) {
-        let result = JSON.parse(response);
-        entries.push(result);
-        url = result.data.link;
-        let message = "✅ " + file.name + " --- " + url;
-        console.log(message);
-        showMessage(message, url);
-        progressAddOne();
-        // return new Promise.resolve(url); // user has to switch format and then it works?
-    }).fail(function (response) {
-        let result = JSON.parse(response.responseText);
-        let message = "❌ " + file.name + " --- " + result.data.error.message
-        console.log(message);
-        showMessage(message);
-        Promise.reject(new Error('fail')).then(resolvedNotcalled, () => {
-            console.debug(result);
-        });
-    });
-
     return new Promise((resolve, reject) => {
-        resolve(url); // this is what whis function returns
-        // with resolve we trigger the next ".then(funName(resolveParam))"
+
+        // Response contains stringified JSON
+        // Image URL available at response.data.link
+        $.ajax(settings).done(function (response) {
+            let result = JSON.parse(response);
+            entries.push(result);
+            url = result.data.link;
+            let message = "✅ " + file.name + " --- " + url;
+            console.log(message);
+            showMessage(message, url);
+            progressAddOne();
+            resolve(url); 
+            // resolve(url);  this is what whis function returns
+            // with resolve we trigger the next ".then(funName(resolveParam))"
+            // return new Promise.resolve(url); user has to switch format and then it works?
+        }).fail(function (response) {
+            let result = JSON.parse(response.responseText);
+            let message = "❌ " + file.name + " --- " + result.data.error.message
+            console.log(message);
+            showMessage(message);
+            reject(new Error('fail')).then(resolvedNotcalled, () => {
+                console.debug(result);
+            });
+        });
+
     })
 }
 
