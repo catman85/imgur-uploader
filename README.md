@@ -1,4 +1,4 @@
-# Imgur Cstom Uploader
+# Imgur Custom Uploader
 ## A simple tool to upload multple images to imgur and format them anyway you want.
 
 ## Demo:
